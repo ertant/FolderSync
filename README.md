@@ -9,9 +9,9 @@ Folder synchronisation as command line tool and msbuild task.
 
 ### Parameters
 
-	sourceFolder
+    sourceFolder
 		Path to source folder.
-	destinationFolder
+    destinationFolder
 		Path to destination folder.
     /mirror
 	    Mirror the directory tree. Removes files on target folder if not exists in source.		

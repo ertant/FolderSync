@@ -18,16 +18,20 @@ namespace FolderSync
 
         public override bool Execute()
         {
-            this.Log.LogMessage(MessageImportance.Normal, $"Copying {this.SourceFolder} to {this.DestinationFolder}");
-            
             var settings = new Settings
             {
                 SourceFolder = this.SourceFolder,
                 DestinationFolder = this.DestinationFolder,
                 ExcludeFiles = (this.ExcludeFiles ?? "").Split(';'),
                 ExcludeFolders = (this.ExcludeFolders ?? "").Split(';'),
-                Mirror = this.Mirror
+                Mirror = this.Mirror,
+                Log = this.Log
             };
+
+            this.Log.LogMessage(MessageImportance.Normal, $"Sync Folders {settings.SourceFolder} to {settings.DestinationFolder}");
+
+            settings.Log?.LogMessage(MessageImportance.Normal, $"Ignoring folders {string.Join(";", settings.ExcludeFolders)}");
+            settings.Log?.LogMessage(MessageImportance.Normal, $"Ignoring files {string.Join(";", settings.ExcludeFiles)}");
 
             var sync = new Sync();
 

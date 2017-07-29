@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Log = Microsoft.Build.Utilities.TaskLoggingHelper;
 
 namespace FolderSync
 {
@@ -22,6 +24,8 @@ namespace FolderSync
         internal Regex[] excludeFiles;
 
         internal Regex[] excludeFolders;
+
+        internal Log Log;
 
         static Regex ToRegex(string pattern)
         {
@@ -110,22 +114,14 @@ namespace FolderSync
 
         public IEnumerable<IOperation> Feed(Settings settings)
         {
-            foreach (var operation in this.CopyFiles(settings))
-            {
-                yield return operation;
-            }
-
-            foreach (var operation in this.CopyFolders(settings))
-            {
-                yield return operation;
-            }
+            return this.CopyFiles(settings).Concat(this.CopyFolders(settings));
         }
 
         public async Task Perform(Settings settings)
         {
             if (!Directory.Exists(this.Target))
             {
-                Console.WriteLine($"+{this.Target}");
+                settings.Log?.LogMessage(MessageImportance.Normal, $"+{this.Target}");
                 Directory.CreateDirectory(this.Target);
             }
 
@@ -151,6 +147,8 @@ namespace FolderSync
                 foreach (var source in sourceFolders)
                 {
                     var targetFullPath = Path.Combine(this.Target, source.Key);
+
+                    settings.Log?.LogMessage(MessageImportance.Low, $"Comparing {this.Source} -> {this.Target}");
 
                     yield return new FolderOperation
                     {
@@ -182,6 +180,8 @@ namespace FolderSync
             foreach (var source in sourceFiles)
             {
                 var targetFullPath = Path.Combine(this.Target, source.Key);
+
+                settings.Log?.LogMessage(MessageImportance.Low, $"Comparing {source.Value} -> {targetFullPath}");
 
                 if (!targetFiles.ContainsKey(source.Key) || File.GetLastWriteTime(source.Value) > File.GetLastWriteTime(targetFullPath))
                 {
@@ -218,7 +218,14 @@ namespace FolderSync
         {
             await Task.Run(() =>
             {
-                Console.WriteLine($"={this.Source} -> {this.Target}");
+                if (settings.Log == null)
+                {
+                    Console.WriteLine($"={this.Source} -> {this.Target}");
+                }
+                else
+                {
+                    settings.Log?.LogMessage(MessageImportance.Normal, $"={this.Source} -> {this.Target}");
+                }
 
                 File.Copy(this.Source, this.Target, true);
             });
@@ -233,7 +240,14 @@ namespace FolderSync
         {
             await Task.Run(() =>
             {
-                Console.WriteLine($"-{this.Path}");
+                if (settings.Log == null)
+                {
+                    Console.WriteLine($"-{this.Path}");
+                }
+                else
+                {
+                    settings.Log?.LogMessage(MessageImportance.Normal, $"-{this.Path}");
+                }
 
                 File.Delete(this.Path);
             });
@@ -248,7 +262,14 @@ namespace FolderSync
         {
             await Task.Run(() =>
             {
-                Console.WriteLine($"-{this.Path}");
+                if (settings.Log == null)
+                {
+                    Console.WriteLine($"-{this.Path}");
+                }
+                else
+                {
+                    settings.Log?.LogMessage(MessageImportance.Normal, $"-{this.Path}");
+                }
 
                 Directory.Delete(this.Path, true);
             });

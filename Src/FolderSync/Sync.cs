@@ -228,6 +228,8 @@ namespace FolderSync
                 }
 
                 File.Copy(this.Source, this.Target, true);
+
+                File.SetLastWriteTime(this.Target, File.GetLastWriteTime(this.Source));
             });
         }
     }
